@@ -1332,7 +1332,7 @@ class DreamBoothDataset(BaseDataset):
                 print(f"not directory: {subset.image_dir}")
                 return [], []
 
-            img_paths = glob_images(subset.image_dir, "*")
+            img_paths = rglob_images(subset.image_dir, "*")
             print(f"found directory {subset.image_dir} contains {len(img_paths)} image files")
 
             # 画像ファイルごとにプロンプトを読み込み、もしあればそちらを使う
@@ -1987,6 +1987,18 @@ def glob_images(directory, base="*"):
     for ext in IMAGE_EXTENSIONS:
         if base == "*":
             img_paths.extend(glob.glob(os.path.join(glob.escape(directory), base + ext)))
+        else:
+            img_paths.extend(glob.glob(glob.escape(os.path.join(directory, base + ext))))
+    img_paths = list(set(img_paths))  # 重複を排除
+    img_paths.sort()
+    return img_paths
+
+
+def rglob_images(directory, base="*"):
+    img_paths = []
+    for ext in IMAGE_EXTENSIONS:
+        if base == "*":
+            img_paths.extend(glob.glob(os.path.join(directory, '**', base + ext), recursive = True))
         else:
             img_paths.extend(glob.glob(glob.escape(os.path.join(directory, base + ext))))
     img_paths = list(set(img_paths))  # 重複を排除

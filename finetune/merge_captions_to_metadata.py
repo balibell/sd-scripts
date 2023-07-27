@@ -1,16 +1,29 @@
 import argparse
 import json
+import glob
 from pathlib import Path
 from typing import List
 from tqdm import tqdm
-import library.train_util as train_util
 import os
+
+IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".bmp", ".PNG", ".JPG", ".JPEG", ".WEBP", ".BMP"]
+
+def rglob_images(directory, base="*"):
+    img_paths = []
+    for ext in IMAGE_EXTENSIONS:
+        if base == "*":
+            img_paths.extend(glob.glob(os.path.join(directory, '**', base + ext), recursive = True))
+        else:
+            img_paths.extend(glob.glob(glob.escape(os.path.join(directory, base + ext))))
+    img_paths = list(set(img_paths))  # 重複を排除
+    img_paths.sort()
+    return img_paths
 
 def main(args):
   assert not args.recursive or (args.recursive and args.full_path), "recursive requires full_path / recursiveはfull_pathと同時に指定してください"
 
   train_data_dir_path = Path(args.train_data_dir)
-  image_paths: List[Path] = train_util.glob_images_pathlib(train_data_dir_path, args.recursive)
+  image_paths: List[Path] = list(map(lambda x: Path(x), rglob_images(train_data_dir_path, '*')))
   print(f"found {len(image_paths)} images.")
 
   if args.in_json is None and Path(args.out_json).is_file():
